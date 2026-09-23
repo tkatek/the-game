@@ -246,6 +246,24 @@
   from {filter:drop-shadow(0 7px 6px rgba(185,139,37,.35)) drop-shadow(0 0 5px rgba(241,197,65,.45));}
   to {filter:drop-shadow(0 7px 6px rgba(185,139,37,.35)) drop-shadow(0 0 14px rgba(246,205,80,.85));}
 }
+/* Correct-word popup: floats over the bloom, then fades away. */
+.wb-word-popup {position:absolute;left:50%;top:42%;z-index:8;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;padding:13px 26px;border-radius:18px;background:rgba(255,255,255,.94);border:1px solid #c9aef3;box-shadow:0 16px 38px rgba(52,38,143,.32);pointer-events:none;animation:wb-word-pop 1.7s ease forwards;}
+.wb-word-popup strong {font-size:24px;font-weight:800;letter-spacing:.5px;color:#282043;}
+.wb-word-popup span {font-size:13px;font-weight:800;color:#5b2fb3;}
+.wb-word-popup.is-pangram {background:linear-gradient(145deg,rgba(255,247,220,.96),rgba(255,233,166,.96));border-color:#e9c45e;}
+.wb-word-popup.is-pangram span {color:#8b620f;}
+.wb-app[data-theme='dark'] .wb-word-popup {background:rgba(34,28,52,.94);border-color:#6a5694;box-shadow:0 16px 38px rgba(0,0,0,.5);}
+.wb-app[data-theme='dark'] .wb-word-popup strong {color:#f3edff;}
+.wb-app[data-theme='dark'] .wb-word-popup span {color:#c9b1ff;}
+.wb-app[data-theme='dark'] .wb-word-popup.is-pangram {background:linear-gradient(145deg,rgba(58,48,36,.96),rgba(46,38,26,.96));border-color:#8a7434;}
+.wb-app[data-theme='dark'] .wb-word-popup.is-pangram span {color:#f1d592;}
+@keyframes wb-word-pop {
+  0% {opacity:0;transform:translate(-50%,-50%) scale(.5);}
+  12% {opacity:1;transform:translate(-50%,-50%) scale(1.08);}
+  22% {transform:translate(-50%,-50%) scale(1);}
+  76% {opacity:1;}
+  100% {opacity:0;transform:translate(-50%,-62%) scale(.94);}
+}
 @keyframes wb-word-arrive {from{transform:translateY(8px);opacity:0;}to{transform:none;opacity:1;}}
 @keyframes wb-modal-arrive {from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
 @keyframes wb-score-pop {50%{transform:translateY(-2px) scale(1.12);color:var(--wb-purple);}}
@@ -313,6 +331,11 @@
   .wb-feedback {order:3;width:100%;max-width:390px;min-height:64px;padding:11px 13px;}
   .wb-feedback strong {font-size:13.5px;}
   .wb-feedback div>span {font-size:11.5px;}
+  /* less scrolling on phones: drop the low-value hints and empty slot rows */
+  .wb-center-note {display:none;}
+  .wb-word-row.is-placeholder {display:none;}
+  /* the bloom itself: a touch smaller */
+  .wb-flower-stage {max-width:300px;}
   .wb-controls {order:4;width:100%;max-width:390px;margin-top:-7px;}
   .wb-submit {min-height:49px;font-size:13px;}
   .wb-secondary {min-height:44px;font-size:12px;}
@@ -357,8 +380,7 @@
   .wb-room {padding:10px 13px;border-radius:18px;}
   .wb-room-label {font-size:0;gap:0;}
   .wb-room-label .wb-status-dot {width:7px;height:7px;}
-  .wb-page-footer {padding:4px;justify-content:center;text-align:center;}
-  .wb-page-footer>span:last-child {display:none;}
+  .wb-page-footer {display:none;}
 }
 .wb-page.wb-embedded {background:transparent;min-height:0;}
 .wb-page.wb-embedded::before {display:none;}

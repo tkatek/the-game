@@ -211,7 +211,7 @@
     if (el.feedback.dataset.kind === 'error') neutralFeedback();
   };
   function appendLetter(ch) {
-    if (!ready || finished || currentWord.length >= MAX_WORD) return;
+    if (finished || currentWord.length >= MAX_WORD) return;
     setWord(currentWord + ch.toUpperCase());
     play('tap');
   }
@@ -221,8 +221,8 @@
   function updateEntryUI() {
     const n = currentWord.length;
     $('[data-bind="letter-count"]').textContent = n + (n === 1 ? ' letter' : ' letters');
-    el.submit.disabled = !ready || finished || n === 0;
-    el.delete.disabled = el.clear.disabled = !ready || finished || n === 0;
+    el.submit.disabled = finished || n === 0;
+    el.delete.disabled = el.clear.disabled = finished || n === 0;
     // used-letter chips: center first, then the outer letters in stable order
     const used = new Set(currentWord);
     [...el.usedLetters.children].forEach(chip => {
@@ -294,7 +294,8 @@
 
   /* ---------- Submit ---------- */
   function submit() {
-    if (!ready || finished || !currentWord) return;
+    if (finished || !currentWord) return;
+    if (!ready) { flashFeedback('neutral', 'One moment…', 'The word list is still loading.'); return; }
     const W = currentWord.toUpperCase();
     const error = validate(W);
     if (error) {
@@ -333,11 +334,25 @@
       play('success');
       flashFeedback('success', `${W} — ${sc.total} points`, detailParts.join(' · '));
     }
+    wordPopup(W, sc);
 
     setWord('');
     updateStats(true);
     renderWordList(accepted.length - 1);
     if (accepted.length >= 12) finishGame();
+  }
+
+  /* ---------- Correct-word popup ---------- */
+  function wordPopup(word, sc) {
+    if (reducedMotion) return;
+    el.flowerStage.querySelectorAll('.wb-word-popup').forEach(p => p.remove());
+    const pop = document.createElement('div');
+    pop.className = 'wb-word-popup' + (sc.pangramBonus ? ' is-pangram' : '');
+    pop.innerHTML =
+      `<strong>${word}</strong>` +
+      `<span>+${sc.total} point${sc.total === 1 ? '' : 's'}${sc.pangramBonus ? ' ★ pangram' : ''}</span>`;
+    el.flowerStage.appendChild(pop);
+    setTimeout(() => pop.remove(), 1750);
   }
 
   /* ---------- Finish ---------- */
@@ -443,12 +458,12 @@
     return best;
   }
   el.flower.addEventListener('pointermove', e => {
-    if (!ready || finished) { setHot(null); return; }
+    if (finished) { setHot(null); return; }
     setHot(petalUnderPointer(e.clientX, e.clientY));
   });
   el.flower.addEventListener('pointerleave', () => setHot(null));
   el.flower.addEventListener('pointerdown', e => {
-    if (!ready || finished) return;
+    if (finished) return;
     suppressClick = true;                      // the native click would land on
     setTimeout(() => { suppressClick = false; }, 80); // the wrong (top) petal
     const btn = petalUnderPointer(e.clientX, e.clientY);
@@ -605,17 +620,29 @@
     updateStats();
     renderWordList();
 
-    const { set, note } = await loadDictionary();
-    dictionary = set;
+    /* Playable instantly: start on the built-in list, then silently upgrade to
+     * the full dictionary. On phones the 6.8MB list can take a while — the
+     * bloom must never look ready but ignore taps. */
+    dictionary = FALLBACK_DICTIONARY;
     ready = true;
     app.setAttribute('aria-busy', 'false');
     el.input.disabled = false;
     el.shuffle.disabled = false;
     updateEntryUI();
     el.dictionaryNote.textContent =
-      `Words are checked against a ${note}. No proper nouns, hyphens, or rude words count.`;
+      'Playing with the built-in starter word list — loading the full dictionary…';
     el.saveStatus.textContent = 'Your progress stays on this device.';
     setFeedback('neutral', 'Ready when you are.', 'Tap the petals or type a word.');
+    loadDictionary().then(({ set, note }) => {
+      if (set === FALLBACK_DICTIONARY) {
+        el.dictionaryNote.textContent =
+          'Words are checked against the built-in starter word list (full list unavailable).';
+        return;
+      }
+      dictionary = set;
+      el.dictionaryNote.textContent =
+        `Words are checked against a ${note}. No proper nouns, hyphens, or rude words count.`;
+    });
   }
   boot();
 
