@@ -86,6 +86,9 @@
 /* soft ground shadow under the blossom */
 .wb-flower-stage::after {content:'';position:absolute;left:50%;bottom:2.5%;width:56%;height:8%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(84,44,148,.3),transparent 68%);pointer-events:none;}
 .wb-flower-halo {position:absolute;width:96%;aspect-ratio:1;border:1px dashed rgba(154,119,217,.18);border-radius:50%;background:radial-gradient(circle,rgba(202,174,249,.17),transparent 65%);pointer-events:none;}
+/* Green leaves peeking out from behind the bloom. */
+.wb-leaves {position:absolute;left:50%;top:54%;width:122%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(50,90,40,.28));}
+.wb-flower {z-index:1;}
 .wb-defs {position:absolute;}
 .wb-flower {width:100%;max-width:384px;aspect-ratio:1;position:relative;container-type:inline-size;transform:perspective(800px) rotateX(var(--wb-tilt-x,0deg)) rotateY(var(--wb-tilt-y,0deg));transition:transform .22s ease;/* Flatten the group so transformed children keep reliable hit areas. */transform-style:flat;}
 /* The whole button rotates (--r). Raw pointer events are handled by the
@@ -373,6 +376,7 @@
 .wb-app[data-theme='dark'] .wb-word-name {color:#f3edff;}
 .wb-app[data-theme='dark'] .wb-flower-halo {border-color:rgba(167,113,243,.22);background:radial-gradient(circle,rgba(167,113,243,.13),transparent 65%);}
 .wb-app[data-theme='dark'] .wb-flower-stage::after {background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 68%);}
+.wb-app[data-theme='dark'] .wb-leaves {filter:brightness(.72) saturate(.92) drop-shadow(0 8px 10px rgba(0,0,0,.5));}
 .wb-app[data-theme='dark'] .wb-bonus-star {background:#e4bd4d;border-color:#f2d77c;color:#624a13;}
 .wb-app[data-theme='dark'] .wb-bonus-token {background:linear-gradient(145deg,#554426,#3a3025);color:#f4cf6f;border-color:#997c3c;box-shadow:0 2px 0 #6c5427;}
 .wb-app[data-theme='dark'] .wb-input-wrap {border-color:#655080;box-shadow:inset 0 2px 3px rgba(0,0,0,.14);}
