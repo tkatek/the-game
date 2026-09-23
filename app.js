@@ -140,12 +140,13 @@
   /* ---------- Flower ---------- */
   const petalPos = i => {
     const a = (-90 + i * 60) * Math.PI / 180;
-    return { x: 50 + 30.5 * Math.cos(a), y: 50 + 30.5 * Math.sin(a) };
+    return { x: 50 + 26.5 * Math.cos(a), y: 50 + 26.5 * Math.sin(a), r: i * 60 };
   };
   const placeButton = (btn, i) => {
-    const { x, y } = petalPos(i);
+    const { x, y, r } = petalPos(i);
     btn.style.setProperty('--x', x.toFixed(2) + '%');
     btn.style.setProperty('--y', y.toFixed(2) + '%');
+    btn.style.setProperty('--r', r + 'deg');
   };
   function renderFlower() {
     el.flower.innerHTML = '';
@@ -155,7 +156,7 @@
     center.className = 'wb-petal is-center';
     center.dataset.letter = puzzle.center;
     center.setAttribute('aria-label', 'Center letter ' + puzzle.center);
-    center.innerHTML = `<span class="wb-petal-face">${puzzle.center}</span>`;
+    center.innerHTML = `<span class="wb-petal-face"><span class="wb-petal-letter">${puzzle.center}</span></span>`;
     center.addEventListener('click', () => appendLetter(puzzle.center));
     el.flower.appendChild(center);
 
@@ -167,7 +168,7 @@
       btn.dataset.letter = letter;
       btn.setAttribute('aria-label', (isBonus ? 'Bonus letter ' : 'Letter ') + letter);
       btn.innerHTML =
-        `<span class="wb-petal-face">${letter}</span>` +
+        `<span class="wb-petal-face"><span class="wb-petal-letter">${letter}</span></span>` +
         (isBonus ? '<span class="wb-bonus-star" aria-hidden="true">★</span>' : '');
       btn.addEventListener('click', () => appendLetter(letter));
       placeButton(btn, i);
@@ -392,6 +393,76 @@
     return arr;
   };
 
+  /* ---------- Pixel-accurate pointer routing ----------
+   * Petals have pointer-events:none, so raw clicks can never land on the wrong
+   * one. The flower itself resolves which petal TEXTURE is under the pointer
+   * (alpha test against the petal image, rotation-aware) and routes taps and
+   * the hover highlight there. What you see is what you click. */
+  const AMAP = 128;
+  let alphaData = null;
+  const alphaImg = new Image();
+  alphaImg.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = c.height = AMAP;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(alphaImg, 0, 0, AMAP, AMAP);
+    try { alphaData = ctx.getImageData(0, 0, AMAP, AMAP).data; } catch (_) { alphaData = null; }
+  };
+  alphaImg.src = 'assets/petal-purple.webp';
+
+  let hotBtn = null;
+  let suppressClick = false;
+  function setHot(btn) {
+    if (hotBtn === btn) return;
+    if (hotBtn) hotBtn.classList.remove('is-hot');
+    hotBtn = btn;
+    if (hotBtn) hotBtn.classList.add('is-hot');
+  }
+  function petalUnderPointer(x, y) {
+    if (!alphaData) return null;
+    let best = null, bestA = 0;
+    // the center disc is painted above the petals: a point inside it is its
+    const disc = el.flower.querySelector('.wb-petal.is-center');
+    if (disc) {
+      const r = disc.getBoundingClientRect();
+      const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)) / (r.width / 2);
+      if (d <= 0.98) { best = disc; bestA = 9999; }
+    }
+    for (const btn of outerButtons) {
+      const r = btn.getBoundingClientRect();
+      const dx = x - (r.left + r.width / 2), dy = y - (r.top + r.height / 2);
+      const ang = -(parseFloat(btn.style.getPropertyValue('--r')) || 0) * Math.PI / 180;
+      const lx = dx * Math.cos(ang) - dy * Math.sin(ang);   // point in the
+      const ly = dx * Math.sin(ang) + dy * Math.cos(ang);   // unrotated button
+      if (Math.abs(lx) > btn.offsetWidth / 2 || Math.abs(ly) > btn.offsetHeight / 2) continue;
+      const u = Math.min(AMAP - 1, Math.max(0, Math.floor((lx / btn.offsetWidth + 0.5) * AMAP)));
+      const v = Math.min(AMAP - 1, Math.max(0, Math.floor((ly / btn.offsetHeight + 0.5) * AMAP)));
+      const a = alphaData[(v * AMAP + u) * 4 + 3] * (btn.classList.contains('is-bonus') ? 1.03 : 1);
+      if (a > bestA) { bestA = a; best = btn; }
+    }
+    return best;
+  }
+  el.flower.addEventListener('pointermove', e => {
+    if (!ready || finished) { setHot(null); return; }
+    setHot(petalUnderPointer(e.clientX, e.clientY));
+  });
+  el.flower.addEventListener('pointerleave', () => setHot(null));
+  el.flower.addEventListener('pointerdown', e => {
+    if (!ready || finished) return;
+    suppressClick = true;                      // the native click would land on
+    setTimeout(() => { suppressClick = false; }, 80); // the wrong (top) petal
+    const btn = petalUnderPointer(e.clientX, e.clientY);
+    setHot(btn);
+    if (btn) {
+      btn.classList.add('is-pressed');
+      setTimeout(() => btn.classList.remove('is-pressed'), 150);
+      appendLetter(btn.dataset.letter);
+    }
+  });
+  el.flower.addEventListener('click', e => {
+    if (suppressClick) { e.stopImmediatePropagation(); suppressClick = false; }
+  }, true);
+
   /* ---------- Confetti ---------- */
   const CONFETTI_COLORS = ['#a571f3', '#ffd365', '#7d46e0', '#8fd7a8', '#ff9db0', '#f4a7c3'];
   function confetti(n) {
@@ -426,6 +497,10 @@
     const meta = $('meta[name="theme-color"]');
     if (meta) meta.content = dark ? '#110f1c' : '#f5f1ff';
   }
+  /* While the player hasn't chosen a theme by hand, follow the device live. */
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (store.get('wb-theme') === null) { dark = e.matches; applyTheme(); }
+  });
 
   /* ---------- Events ---------- */
   el.form.addEventListener('submit', e => { e.preventDefault(); submit(); });
@@ -507,8 +582,11 @@
   }
   async function boot() {
     if (new URLSearchParams(location.search).has('embed')) document.body.classList.add('wb-embedded');
-    dark = store.get('wb-theme') === 'dark' ||
-      (store.get('wb-theme') === null && matchMedia('(prefers-color-scheme: dark)').matches);
+    /* saved choice wins; otherwise follow the device preference (the inline
+     * script in index.html already applied it before first paint) */
+    const storedTheme = store.get('wb-theme');
+    dark = storedTheme ? storedTheme === 'dark'
+      : matchMedia('(prefers-color-scheme: dark)').matches;
     soundOn = store.get('wb-sound') === 'on';
     applyTheme();
     if (soundOn) {
