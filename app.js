@@ -40,7 +40,6 @@
     saveStatus: $('#save-status'),
     confetti: $('.wb-confetti'),
     dlgHelp: $('#instructions'),
-    helpBloom: $('#help-bloom'),
     helpBtn: $('.wb-help-row .wb-help'),
     dlgFinish: $('#finish-dialog'),
     finishScore: $('#finish-score'),
@@ -203,7 +202,6 @@
     const others = outerOrder.filter(l => l !== bonusLetter);
     bonusLetter = others[Math.floor(Math.random() * others.length)] || bonusLetter;
     updateBonusUI();
-    updateHelpFlower();
     outerButtons.forEach((btn, i) => {
       btn.style.transitionDelay = (i * 45) + 'ms'; // staggered wave
       placeButton(btn, perm[i]);
@@ -360,31 +358,6 @@
     if (accepted.length >= 12) finishGame();
   }
 
-  /* ---------- How-to-play mini flower ----------
-   * A non-interactive illustration for the help dialog: same assets as the
-   * playable bloom, showing the CURRENT puzzle letters and bonus letter.
-   * The bonus letter always sits at the upper-left so its label stays put. */
-  var HB_POS = [[50, 8], [78, 29], [78, 71], [50, 92], [22, 71], [22, 29]];
-  var HB_ROT = [0, 60, 120, 180, 240, 300];
-  function updateHelpFlower() {
-    if (!el.helpBloom) return;
-    var letters = outerOrder.length === 6 ? outerOrder.slice() : shuffledOuter();
-    var bi = letters.indexOf(bonusLetter);
-    if (bi > 0) { letters.push(letters.splice(bi, 1)[0]); }   // bonus -> last = upper-left
-    var html = '<img class="wb-hb-leaf l" src="assets/leaf-left.webp" alt="">' +
-               '<img class="wb-hb-leaf r" src="assets/leaf-right.webp" alt="">';
-    for (var i = 0; i < 6; i++) {
-      var L = letters[i];
-      var gold = L === bonusLetter;
-      html += '<span class="wb-hb-petal' + (gold ? ' gold' : '') + '" style="left:' + HB_POS[i][0] +
-              '%;top:' + HB_POS[i][1] + '%;--r:' + HB_ROT[i] + 'deg;">' +
-              '<img src="assets/petal-' + (gold ? 'gold' : 'purple') + '.webp" alt="">' +
-              '<b class="wb-hb-letter">' + L + '</b></span>';
-    }
-    html += '<span class="wb-hb-center"><img src="assets/center-disc.webp" alt=""><b class="wb-hb-center-letter">' + puzzle.center + '</b></span>';
-    el.helpBloom.innerHTML = html;
-  }
-
   /* ---------- Correct-word popup ---------- */
   const STAR_SVG =
     '<svg viewBox="0 0 24 24" aria-hidden="true">' +
@@ -453,7 +426,6 @@
     $('[data-bind="bonus"]').textContent = bonusLetter;
     buildUsedLetters();
     renderFlower();
-    updateHelpFlower();
     updateEntryUI();
     updateStats();
     renderWordList();
@@ -661,7 +633,6 @@
     $('[data-bind="bonus"]').textContent = puzzle.bonus;
     buildUsedLetters();
     renderFlower();
-    updateHelpFlower();
     updateEntryUI();
     updateStats();
     renderWordList();
