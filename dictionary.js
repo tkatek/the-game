@@ -61,6 +61,8 @@ const FALLBACK_WORDS = [
   "tenses", "teases", "teaser", "teasers", "caress", "caresses", "enact",
   "enacts", "cranes", "crescent", "secant", "secants", "terrace", "terraces",
   "seer", "seers", "sate", "sates", "teas",
+  "seat", "seats", "neat", "near", "nears", "earn", "earns", "east", "sent",
+  "nets", "tens", "arcs", "rant", "rants", "tear", "ears", "eras", "ants",
   // Set B — center A (puzzle 2); pangram: PLANTED
   "plant", "plants", "plate", "plates", "plated", "planted", "planet", "planets",
   "planed", "plans", "pane", "panes", "paled", "panted", "pleat", "pleats",

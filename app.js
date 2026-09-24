@@ -34,6 +34,7 @@
     progressFill: $('#progress-fill'),
     wordList: $('#word-list'),
     wordListEmpty: $('#word-list-empty'),
+    wordbank: $('.wb-wordbank'),
     usedLetters: $('#used-letters'),
     dictionaryNote: $('#dictionary-note'),
     saveStatus: $('#save-status'),
@@ -265,6 +266,8 @@
     $$('[data-bind="count"]').forEach(n => n.textContent = accepted.length);
     el.progressFill.style.width = (accepted.length / 12 * 100) + '%';
     el.progressTrack.setAttribute('aria-valuenow', accepted.length);
+    // on phones the Accepted words card stays hidden until the first find
+    el.wordbank.classList.toggle('has-words', accepted.length > 0);
     if (pop && !reducedMotion) {
       el.score.classList.remove('wb-score-pop');
       void el.score.offsetWidth; // restart the animation
@@ -343,16 +346,32 @@
   }
 
   /* ---------- Correct-word popup ---------- */
+  const STAR_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M12 1.6l3 6.3 6.9.9-5.1 4.8 1.3 6.8-6.1-3.3-6.1 3.3 1.3-6.8L2.1 8.8l6.9-.9z" fill="#ffd365" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>' +
+    '<path d="M12 1.6l3 6.3 6.9.9-5.1 4.8 1.3 6.8-6.1-3.3-6.1 3.3 1.3-6.8L2.1 8.8l6.9-.9z" fill="#ffd365" stroke="#c98d1b" stroke-width="1" stroke-linejoin="round"/></svg>';
+  function hypeFor(word) {
+    if (word.length >= 8) return 'SPECTACULAR!';
+    if (word.length >= 7) return 'SUPERB!';
+    if (word.length >= 6) return 'AMAZING!';
+    if (word.length >= 5) return 'LOVELY!';
+    return 'GREAT!';
+  }
   function wordPopup(word, sc) {
     if (reducedMotion) return;
-    el.flowerStage.querySelectorAll('.wb-word-popup').forEach(p => p.remove());
+    el.flowerStage.querySelectorAll('.wb-reward').forEach(p => p.remove());
     const pop = document.createElement('div');
-    pop.className = 'wb-word-popup' + (sc.pangramBonus ? ' is-pangram' : '');
+    pop.className = 'wb-reward' + (sc.pangramBonus ? ' is-pangram' : '');
     pop.innerHTML =
-      `<strong>${word}</strong>` +
-      `<span>+${sc.total} point${sc.total === 1 ? '' : 's'}${sc.pangramBonus ? ' ★ pangram' : ''}</span>`;
+      '<div class="wb-reward-rays" aria-hidden="true"></div>' +
+      '<div class="wb-reward-card">' +
+        `<div class="wb-reward-star" aria-hidden="true">${STAR_SVG}</div>` +
+        `<div class="wb-reward-hype">${sc.pangramBonus ? 'PANGRAM!' : hypeFor(word)}</div>` +
+        `<div class="wb-reward-word">${word}</div>` +
+        `<div class="wb-reward-pts">${STAR_SVG}<b>+${sc.total}</b></div>` +
+      '</div>';
     el.flowerStage.appendChild(pop);
-    setTimeout(() => pop.remove(), 1750);
+    setTimeout(() => pop.remove(), 2050);
   }
 
   /* ---------- Finish ---------- */
