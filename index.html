@@ -8,9 +8,9 @@
   <meta name="description" content="Build twelve words, find the pangram, and watch your vocabulary bloom.">
   <title>Word Bloom · A little word garden</title>
   <link rel="icon" href="https://i.ibb.co/LD2MHDHc/cd8d9058-cd28-4bed-8983-2becbd01682a.png" type="image/png">
-  <link rel="stylesheet" href="style.css">
-  <script src="dictionary.js" defer></script>
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=7">
+  <script src="dictionary.js?v=7" defer></script>
+  <script src="app.js?v=7" defer></script>
 </head>
 <body class="wb-page">
   <script>
@@ -30,26 +30,10 @@
     </clipPath>
   </defs></svg>
   <div class="wb-demo">
-    <!-- Preview shell ONLY. The classroom app supplies its real participant header.
-         ?embed=1 hides this shell. Never connect these initials to a real identity. -->
-    <header class="wb-room" data-demo-shell>
-      <div class="wb-room-person"><span class="wb-avatar" aria-hidden="true">A</span><div><strong>Aya <span class="wb-level">C2</span></strong><span class="wb-room-subtitle">English practice room</span></div></div>
-      <div class="wb-room-label"><span class="wb-status-dot"></span> Word-building activity</div>
-    </header>
     <div class="wb-host">
-      <main class="wb-app wb-activity" id="activity" data-word-bloom data-dictionary="words_dictionary.json" tabindex="-1" aria-labelledby="game-title" aria-busy="true">
+      <main class="wb-app wb-activity" id="activity" data-word-bloom data-dictionary="words_dictionary.json" tabindex="-1" aria-label="Word Bloom — build twelve words from seven letters" aria-busy="true">
         <!-- All gameplay is inside this card. Keep the responsive sizing in style.css. -->
-        <header class="wb-header">
-          <div class="wb-brand">
-            <img class="wb-logo" src="https://i.ibb.co/LD2MHDHc/cd8d9058-cd28-4bed-8983-2becbd01682a.png" alt="" width="52" height="52">
-            <div><p class="wb-eyebrow">THE 12-WORD CHALLENGE</p><h1 id="game-title">Word Bloom</h1><p class="wb-tagline">Small words. Brighter minds.</p></div>
-          </div>
-          <div class="wb-header-actions">
-            <button type="button" class="wb-icon-button" data-action="sound" aria-label="Turn game sounds on" aria-pressed="false" title="Game sounds off"><span data-icon="sound-off"></span></button>
-            <button type="button" class="wb-icon-button" data-action="theme" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><span data-icon="moon"></span></button>
-            <button type="button" class="wb-button wb-help" data-action="help"><span data-icon="help"></span><span>How to play</span></button>
-          </div>
-        </header>
+        <h1 class="wb-sr-only">Word Bloom</h1>
 
         <div class="wb-content">
           <section class="wb-flower-panel" aria-label="Choose letters">
@@ -72,7 +56,7 @@
               <div class="wb-used-letters" aria-hidden="true" id="used-letters"></div>
               <p id="word-hint" class="wb-input-hint">Tap the petals or type a word.</p>
             </div>
-            <div class="wb-feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true" data-kind="neutral"><span class="wb-feedback-icon" data-icon="sparkle" aria-hidden="true"></span><div><strong id="feedback-title">Preparing your garden…</strong><span id="feedback-detail">Checking the word list.</span></div></div>
+            <div class="wb-feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true" data-kind="neutral"><span class="wb-feedback-icon" data-icon="bulb" aria-hidden="true"></span><div><strong id="feedback-title">Preparing your garden…</strong><span id="feedback-detail">Checking the word list.</span></div></div>
             <div class="wb-controls">
               <button class="wb-button wb-submit" id="btn-submit" type="submit" disabled><span data-icon="arrow-right"></span><span>Submit word</span><kbd>↵</kbd></button>
               <div class="wb-secondary-controls"><button class="wb-button wb-secondary" id="btn-delete" type="button" data-action="delete" disabled><span data-icon="backspace"></span>Delete</button><button class="wb-button wb-secondary" id="btn-clear" type="button" data-action="clear" disabled><span data-icon="trash"></span>Clear</button></div>
@@ -94,17 +78,44 @@
             <div class="wb-wordbank-tip"><span data-icon="sparkle" aria-hidden="true"></span><p>Use all 7 letters in one word.<strong>That's a pangram. +7 extra!</strong></p></div>
           </aside>
         </div>
+        <div class="wb-help-row">
+          <button type="button" class="wb-icon-button wb-help" data-action="help" aria-label="How to play" title="How to play"><span data-icon="help"></span></button>
+        </div>
         <div class="wb-confetti" aria-hidden="true"></div>
         <noscript><p class="wb-fatal">This word game needs JavaScript. Enable JavaScript and reload the page.</p></noscript>
 
-        <dialog class="wb-dialog" id="instructions" aria-labelledby="help-title">
-          <div class="wb-dialog-header"><div><p class="wb-eyebrow">LET YOUR VOCABULARY GROW</p><h2 id="help-title">How to play</h2></div><button type="button" class="wb-icon-button" data-close aria-label="Close instructions"><span data-icon="close"></span></button></div>
-          <div class="wb-dialog-body"><p>Find <strong>12 different words</strong> using only the seven letters in your flower. There's no time limit.</p>
-            <ol class="wb-rules"><li>Use <strong>at least four letters</strong> and include the purple center letter in every word.</li><li>Letters can be used <strong>more than once</strong>. Shuffle only rearranges the six outer petals.</li><li>The yellow-outlined letter earns <strong>5 extra points every time it appears</strong> in an accepted word.</li><li>Use all seven letters at least once for a <strong>pangram: 7 extra points</strong>.</li><li>Only words in this game's approved English list count. No proper nouns, hyphens, foul language, or repeated submissions. Invalid words don't cost a slot.</li></ol>
-            <h3>Make longer words. Earn more.</h3><table class="wb-score-table"><caption class="wb-sr-only">Base points by word length</caption><thead><tr><th scope="col">Word length</th><th scope="col">Base points</th></tr></thead><tbody><tr><td>4 letters</td><td>2</td></tr><tr><td>5 letters</td><td>4</td></tr><tr><td>6 letters</td><td>6</td></tr><tr><td>7 letters</td><td>12</td></tr><tr><td>8 or more</td><td>12 + 3 for each letter beyond 7</td></tr></tbody></table>
-            <div class="wb-example"><strong>A scoring example</strong><p>With Y as the bonus: CANARY earns 6 base + 5 bonus = <b>11 points</b>. CATENARY uses A, C, E, N, R, T and Y: 15 base + 5 bonus + 7 pangram = <b>27 points</b>.</p></div>
-            <p class="wb-dictionary-note" id="dictionary-note">Loading dictionary…</p>
-          </div><div class="wb-dialog-footer"><button type="button" class="wb-button wb-submit" data-close>Let's play<span data-icon="arrow-right"></span></button></div>
+        <dialog class="wb-dialog wb-help-dialog" id="instructions" aria-labelledby="help-title">
+          <div class="wb-dialog-header">
+            <div><h2 id="help-title">How to play</h2><p class="wb-help-subtitle">Make words. Grow your vocabulary!</p></div>
+            <button type="button" class="wb-icon-button" data-close aria-label="Close instructions"><span data-icon="close"></span></button>
+          </div>
+          <div class="wb-help-body">
+            <div class="wb-help-visual">
+              <div class="wb-help-bloom" id="help-bloom" aria-hidden="true"></div>
+              <div class="wb-hb-chip chip-outer">Outer letter
+                <svg class="hb-arrow" viewBox="0 0 30 34" aria-hidden="true"><path d="M24 3 C 14 9, 10 18, 13 30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="4 4" stroke-linecap="round"/><path d="M8 25 l5 8 7-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="wb-hb-chip chip-bonus">Bonus letter<small>+5 points each time it appears</small>
+                <svg class="hb-arrow" viewBox="0 0 30 34" aria-hidden="true"><path d="M6 3 C 16 9, 20 18, 17 30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="4 4" stroke-linecap="round"/><path d="M22 25 l-5 8 -7-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="wb-hb-chip chip-center">Center letter<small>must be used</small>
+                <svg class="hb-arrow" viewBox="0 0 30 34" aria-hidden="true"><path d="M22 31 C 14 26, 12 18, 15 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="4 4" stroke-linecap="round"/><path d="M10 12 l5-8 7 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <p class="wb-help-shuffle-note">Shuffle rearranges the outer petals and picks a different bonus letter. The center stays fixed.</p>
+            </div>
+            <div class="wb-help-rules">
+              <div class="wb-help-rule"><span class="wb-help-num">1</span><div><b>Make 12 different words</b><p>Use only the seven letters in your flower. Each word needs at least 4 letters.</p></div></div>
+              <div class="wb-help-rule"><span class="wb-help-num">2</span><div><b>Use the center letter</b><p>Every word must include the orange center letter.</p></div></div>
+              <div class="wb-help-rule"><span class="wb-help-num">3</span><div><b>You can reuse letters</b><p>Letters can be used more than once.</p></div></div>
+              <div class="wb-help-rule"><span class="wb-help-num">4</span><div><b>Bonus letter</b><p>The highlighted bonus letter adds <b>+5 points</b> every time it appears in an accepted word.</p></div></div>
+              <div class="wb-help-rule"><span class="wb-help-num">5</span><div><b>Find the pangram</b><p>Use all seven letters in one valid word for <b>+7 extra points</b>.</p></div></div>
+              <div class="wb-help-rule"><span class="wb-help-num">6</span><div><b>Score more with longer words</b><p class="wb-score-inline">4 letters = 2 · 5 = 4 · 6 = 6 · 7 = 12 · 8+ = 12 + 3 per extra letter — bonus and pangram points add on top.</p></div></div>
+            </div>
+          </div>
+          <div class="wb-dialog-footer">
+            <div class="wb-help-reminder"><span class="wb-help-reminder-icon" data-icon="bulb"></span><p><b>Only approved English words count.</b> No proper nouns, hyphens, foul language, or duplicate words — invalid attempts don't use a word slot.<span id="dictionary-note"></span></p></div>
+            <button type="button" class="wb-button wb-got-it" data-close>Got it!<span data-icon="arrow-right"></span></button>
+          </div>
         </dialog>
         <dialog class="wb-dialog wb-finish-dialog" id="finish-dialog" aria-labelledby="finish-title">
           <div class="wb-finish-art" aria-hidden="true"><span data-icon="trophy"></span><span class="wb-finish-star">✦</span></div>
@@ -115,7 +126,6 @@
         </dialog>
       </main>
     </div>
-    <footer class="wb-page-footer" data-demo-shell><span><span class="wb-status-dot"></span><span id="save-status">Your progress stays on this device.</span></span><span>7 letters <i>·</i> 12 words <i>·</i> endless curiosity</span></footer>
   </div>
 </body>
 </html>

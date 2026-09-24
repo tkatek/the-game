@@ -40,14 +40,14 @@
     saveStatus: $('#save-status'),
     confetti: $('.wb-confetti'),
     dlgHelp: $('#instructions'),
+    helpBloom: $('#help-bloom'),
+    helpBtn: $('.wb-help-row .wb-help'),
     dlgFinish: $('#finish-dialog'),
     finishScore: $('#finish-score'),
     finishPangrams: $('#finish-pangrams'),
     finishBonus: $('#finish-bonus'),
     finishBest: $('#finish-best'),
-    playAgain: $('#btn-play-again'),
-    themeBtn: $('[data-action="theme"]'),
-    soundBtn: $('[data-action="sound"]')
+    playAgain: $('#btn-play-again')
   };
 
   /* ---------- Icons ---------- */
@@ -55,6 +55,7 @@
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
   const ICONS = {
     sparkle: svg('<path d="M12 3l1.9 5.6 5.6 1.9-5.6 1.9L12 18l-1.9-5.6-5.6-1.9 5.6-1.9z"/>'),
+    bulb: svg('<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.75.55 1.1 1.35 1.2 2.2h4.8c.1-.85.45-1.65 1.2-2.2A6 6 0 0 0 12 3z"/>'),
     help: svg('<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.45-1.2 1-1.2 1.9"/><path d="M12 16.6h.01"/>'),
     'arrow-right': svg('<path d="M4 12h15"/><path d="m13 6 6 6-6 6"/>'),
     backspace: svg('<path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7 6-7z"/><path d="m12.5 9.5 5 5M17.5 9.5l-5 5"/>'),
@@ -74,6 +75,9 @@
   /* ---------- State ---------- */
   let puzzleIndex = 0;
   let puzzle = PUZZLES[puzzleIndex];
+  /* The bonus letter starts as the puzzle's default and can change on shuffle —
+   * the center letter never does. */
+  let bonusLetter = puzzle.bonus;
   let allowed = new Set();
   let outerOrder = [];
   let outerButtons = [];
@@ -98,7 +102,7 @@
   const scoreWord = word => {
     const W = word.toUpperCase();
     const base = baseScore(W.length);
-    const bonusPts = [...W].filter(ch => ch === puzzle.bonus).length * 5;
+    const bonusPts = [...W].filter(ch => ch === bonusLetter).length * 5;
     const pangramBonus = isPangram(W) ? 7 : 0;
     return { base, bonusPts, pangramBonus, total: base + bonusPts + pangramBonus };
   };
@@ -162,7 +166,7 @@
     el.flower.appendChild(center);
 
     outerOrder.forEach((letter, i) => {
-      const isBonus = letter === puzzle.bonus;
+      const isBonus = letter === bonusLetter;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'wb-petal' + (isBonus ? ' is-bonus' : '');
@@ -177,11 +181,18 @@
       outerButtons.push(btn);
     });
   }
+  /* Keep every bonus-letter surface in sync: the gold petal, the stat pill and
+   * the used-letter chips all follow the runtime bonus letter. */
+  function updateBonusUI() {
+    $('[data-bind="bonus"]').textContent = bonusLetter;
+    outerButtons.forEach(b => b.classList.toggle('is-bonus', b.dataset.letter === bonusLetter));
+    [...el.usedLetters.children].forEach(chip => chip.classList.toggle('bonus', chip.dataset.letter === bonusLetter));
+  }
   function shuffleOuter() {
     if (!outerButtons.length) return;
     // Permute the six petal POSITIONS (Fisher-Yates); each letter keeps its
-    // button and glides to a new spot, so the letter set, center letter and
-    // bonus letter never change.
+    // button and glides to a new spot. The letter set and center letter never
+    // change — and the bonus letter moves to a different outer letter.
     const n = outerButtons.length;
     const perm = [...Array(n).keys()];
     for (let i = n - 1; i > 0; i--) {
@@ -189,6 +200,10 @@
       [perm[i], perm[j]] = [perm[j], perm[i]];
     }
     if (perm.every((v, i) => v === i)) perm.unshift(perm.pop()); // always move something
+    const others = outerOrder.filter(l => l !== bonusLetter);
+    bonusLetter = others[Math.floor(Math.random() * others.length)] || bonusLetter;
+    updateBonusUI();
+    updateHelpFlower();
     outerButtons.forEach((btn, i) => {
       btn.style.transitionDelay = (i * 45) + 'ms'; // staggered wave
       placeButton(btn, perm[i]);
@@ -237,7 +252,7 @@
       chip.className = 'wb-used-letter';
       chip.dataset.letter = letter;
       chip.textContent = letter;
-      if (letter === puzzle.bonus) chip.classList.add('bonus');
+      if (letter === bonusLetter) chip.classList.add('bonus');
       el.usedLetters.appendChild(chip);
     });
   }
@@ -248,7 +263,7 @@
     el.feedback.dataset.kind = kind;
     el.feedbackTitle.textContent = title;
     el.feedbackDetail.textContent = detail;
-    setIcon(el.feedbackIcon, kind === 'error' ? 'close' : kind === 'neutral' ? 'sparkle' : 'trophy');
+    setIcon(el.feedbackIcon, kind === 'error' ? 'close' : kind === 'neutral' ? 'bulb' : 'trophy');
   }
   function neutralFeedback() {
     if (accepted.length === 0) setFeedback('neutral', 'Ready when you are.', 'Tap the petals or type a word.');
@@ -345,6 +360,31 @@
     if (accepted.length >= 12) finishGame();
   }
 
+  /* ---------- How-to-play mini flower ----------
+   * A non-interactive illustration for the help dialog: same assets as the
+   * playable bloom, showing the CURRENT puzzle letters and bonus letter.
+   * The bonus letter always sits at the upper-left so its label stays put. */
+  var HB_POS = [[50, 8], [78, 29], [78, 71], [50, 92], [22, 71], [22, 29]];
+  var HB_ROT = [0, 60, 120, 180, 240, 300];
+  function updateHelpFlower() {
+    if (!el.helpBloom) return;
+    var letters = outerOrder.length === 6 ? outerOrder.slice() : shuffledOuter();
+    var bi = letters.indexOf(bonusLetter);
+    if (bi > 0) { letters.push(letters.splice(bi, 1)[0]); }   // bonus -> last = upper-left
+    var html = '<img class="wb-hb-leaf l" src="assets/leaf-left.webp" alt="">' +
+               '<img class="wb-hb-leaf r" src="assets/leaf-right.webp" alt="">';
+    for (var i = 0; i < 6; i++) {
+      var L = letters[i];
+      var gold = L === bonusLetter;
+      html += '<span class="wb-hb-petal' + (gold ? ' gold' : '') + '" style="left:' + HB_POS[i][0] +
+              '%;top:' + HB_POS[i][1] + '%;--r:' + HB_ROT[i] + 'deg;">' +
+              '<img src="assets/petal-' + (gold ? 'gold' : 'purple') + '.webp" alt="">' +
+              '<b class="wb-hb-letter">' + L + '</b></span>';
+    }
+    html += '<span class="wb-hb-center"><img src="assets/center-disc.webp" alt=""><b class="wb-hb-center-letter">' + puzzle.center + '</b></span>';
+    el.helpBloom.innerHTML = html;
+  }
+
   /* ---------- Correct-word popup ---------- */
   const STAR_SVG =
     '<svg viewBox="0 0 24 24" aria-hidden="true">' +
@@ -409,9 +449,11 @@
     el.input.removeAttribute('aria-invalid');
     el.shuffle.disabled = !ready;
     $('[data-bind="center"]').textContent = puzzle.center;
-    $('[data-bind="bonus"]').textContent = puzzle.bonus;
+    bonusLetter = puzzle.bonus;
+    $('[data-bind="bonus"]').textContent = bonusLetter;
     buildUsedLetters();
     renderFlower();
+    updateHelpFlower();
     updateEntryUI();
     updateStats();
     renderWordList();
@@ -524,16 +566,12 @@
   function applyTheme() {
     document.body.dataset.theme = dark ? 'dark' : 'light';
     app.dataset.theme = dark ? 'dark' : 'light';
-    el.themeBtn.setAttribute('aria-pressed', dark);
-    el.themeBtn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
-    el.themeBtn.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
-    setIcon(iconSpan(el.themeBtn), dark ? 'sun' : 'moon');
     const meta = $('meta[name="theme-color"]');
-    if (meta) meta.content = dark ? '#110f1c' : '#f5f1ff';
+    if (meta) meta.content = dark ? '#101624' : '#f2f6fc';
   }
-  /* While the player hasn't chosen a theme by hand, follow the device live. */
+  /* The theme always follows the player's device — no manual override. */
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    if (store.get('wb-theme') === null) { dark = e.matches; applyTheme(); }
+    dark = e.matches; applyTheme();
   });
 
   /* ---------- Events ---------- */
@@ -544,25 +582,13 @@
   el.playAgain.addEventListener('click', nextPuzzle);
   el.results.addEventListener('click', () => el.dlgFinish.showModal());
   $('[data-action="help"]').addEventListener('click', () => el.dlgHelp.showModal());
-  el.themeBtn.addEventListener('click', () => {
-    dark = !dark;
-    store.set('wb-theme', dark ? 'dark' : 'light');
-    applyTheme();
-  });
-  el.soundBtn.addEventListener('click', () => {
-    soundOn = !soundOn;
-    store.set('wb-sound', soundOn ? 'on' : 'off');
-    el.soundBtn.setAttribute('aria-pressed', soundOn);
-    el.soundBtn.setAttribute('aria-label', soundOn ? 'Turn game sounds off' : 'Turn game sounds on');
-    el.soundBtn.title = el.soundBtn.getAttribute('aria-label');
-    setIcon(iconSpan(el.soundBtn), soundOn ? 'sound-on' : 'sound-off');
-    if (soundOn) play('tap');
-  });
   [el.dlgHelp, el.dlgFinish].forEach(dlg => {
     dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
     $$('[data-close]', dlg).forEach(btn => btn.addEventListener('click', () => dlg.close()));
     dlg.addEventListener('close', () => { if (document.activeElement === document.body) el.input.focus(); });
   });
+  /* closing the help dialog returns focus to the ? button that opened it */
+  el.dlgHelp.addEventListener('close', () => { if (el.helpBtn) el.helpBtn.focus(); });
 
   el.input.addEventListener('input', () => {
     // keep only allowed letters, uppercase, capped length
@@ -599,35 +625,35 @@
   }
 
   /* ---------- Dictionary & boot ---------- */
-  async function loadDictionary() {
-    try {
-      const res = await fetch(app.dataset.dictionary);
+  /* ---------- Dictionary upgrade (instant play -> full list) ----------
+   * Re-runnable and idempotent: the watchdog below calls it again if the
+   * first attempt hung (recreated webviews can hang early subresource fetches). */
+  var dictUpgraded = false;
+  function upgradeDictionary() {
+    if (dictUpgraded) return Promise.resolve();
+    var timeout = new Promise(function(_, rej){ setTimeout(function(){ rej(new Error('dictionary fetch timeout')); }, 8000); });
+    var fetchP = fetch(app.dataset.dictionary + String(Date.now())).then(function(res){
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const json = await res.json();
-      const set = new Set();
-      for (const w of Object.keys(json)) {
+      return res.json();
+    });
+    return Promise.race([fetchP, timeout]).then(function(json) {
+      var set = new Set();
+      for (var w of Object.keys(json)) {
         if (w.length >= 4 && !PROFANITY.has(w) && /^[a-z]+$/.test(w)) set.add(w);
       }
       if (set.size < 10000) throw new Error('word list looks wrong');
-      return { set, note: `${set.size.toLocaleString('en-US')} approved English words` };
-    } catch (_) {
-      return { set: FALLBACK_DICTIONARY, note: 'built-in starter word list (full list unavailable)' };
-    }
+      dictUpgraded = true;
+      dictionary = set;
+      el.dictionaryNote.textContent =
+        'Words are checked against ' + set.size.toLocaleString('en-US') + ' approved English words. No proper nouns, hyphens, or rude words count.';
+    });
   }
   async function boot() {
     if (new URLSearchParams(location.search).has('embed')) document.body.classList.add('wb-embedded');
-    /* saved choice wins; otherwise follow the device preference (the inline
-     * script in index.html already applied it before first paint) */
-    const storedTheme = store.get('wb-theme');
-    dark = storedTheme ? storedTheme === 'dark'
-      : matchMedia('(prefers-color-scheme: dark)').matches;
-    soundOn = store.get('wb-sound') === 'on';
+    /* the theme always follows the player's device (applied pre-paint by the
+     * inline script in index.html) */
+    dark = matchMedia('(prefers-color-scheme: dark)').matches;
     applyTheme();
-    if (soundOn) {
-      el.soundBtn.setAttribute('aria-pressed', 'true');
-      el.soundBtn.setAttribute('aria-label', 'Turn game sounds off');
-      setIcon(iconSpan(el.soundBtn), 'sound-on');
-    }
 
     allowed = new Set([puzzle.center, ...puzzle.outer]);
     outerOrder = shuffledOuter();
@@ -635,6 +661,7 @@
     $('[data-bind="bonus"]').textContent = puzzle.bonus;
     buildUsedLetters();
     renderFlower();
+    updateHelpFlower();
     updateEntryUI();
     updateStats();
     renderWordList();
@@ -652,16 +679,12 @@
       'Playing with the built-in starter word list — loading the full dictionary…';
     el.saveStatus.textContent = 'Your progress stays on this device.';
     setFeedback('neutral', 'Ready when you are.', 'Tap the petals or type a word.');
-    loadDictionary().then(({ set, note }) => {
-      if (set === FALLBACK_DICTIONARY) {
-        el.dictionaryNote.textContent =
-          'Words are checked against the built-in starter word list (full list unavailable).';
-        return;
-      }
-      dictionary = set;
-      el.dictionaryNote.textContent =
-        `Words are checked against a ${note}. No proper nouns, hyphens, or rude words count.`;
-    });
+    upgradeDictionary(0);
+    /* watchdog: if the upgrade is still pending, run it again (idempotent) */
+    setTimeout(function check() {
+      if (!dictUpgraded) upgradeDictionary(0);
+      setTimeout(check, 5000);
+    }, 5000);
   }
   boot();
 
@@ -670,6 +693,7 @@
     validate, scoreWord, isPangram, submit, shuffleOuter, nextPuzzle,
     get puzzle() { return puzzle; },
     get outerOrder() { return [...outerOrder]; },
+    get bonusLetter() { return bonusLetter; },
     get currentWord() { return currentWord; },
     get accepted() { return [...accepted]; },
     get totalScore() { return totalScore; },
