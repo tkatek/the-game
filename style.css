@@ -119,6 +119,9 @@
 .wb-shuffle {border-radius:30px;min-height:36px;font-size:11px;padding:8px 16px;background:var(--wb-panel);box-shadow:0 3px 7px rgba(93,59,146,.04);}
 .wb-shuffle svg {width:15px;height:15px;color:var(--wb-purple);}
 .wb-shuffle.is-shuffling svg {animation:wb-turn .58s ease;}
+/* Hover: the shuffle lights up in the bloom's purple. */
+.wb-button.wb-shuffle:not(:disabled):hover {background:linear-gradient(145deg,#a571f3,#7435ce);border-color:#8749e5;color:#fff;box-shadow:0 4px 12px rgba(116,53,206,.4);}
+.wb-button.wb-shuffle:not(:disabled):hover svg {color:#fff;}
 .wb-flower-hint {font-size:11.5px!important;color:var(--wb-muted);margin-top:7px!important;font-weight:600;}
 .wb-editor {grid-area:editor;display:flex;flex-direction:column;gap:18px;padding-top:1px;min-width:0;margin:0;}
 .wb-field-heading {display:flex;align-items:center;justify-content:space-between;gap:5px;margin:0 0 10px;text-align:left;}
